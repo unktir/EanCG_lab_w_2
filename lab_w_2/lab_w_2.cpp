@@ -1,6 +1,4 @@
-﻿#define _USE_MATH_DEFINES
-
-#include <GL/glew.h>
+﻿#include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <glm/glm.hpp>
 #include <cmath>
@@ -9,8 +7,9 @@ GLuint VBO;
 float Scale = 0.0f;
 
 /*	Объявление функций	*/
-static void CreateVertexBuffer(glm::mat4& m);
+static void CreateVertexBuffer(glm::mat4& m, glm::mat4& r);
 glm::mat4 moving(glm::mat4& m);
+glm::mat4 rotation(glm::mat4& m);
 
 /*	Функция рендера сцены	*/
 static void RenderScene()
@@ -20,8 +19,9 @@ static void RenderScene()
 	Scale += 0.001f;
 
 	glm::mat4 mov_mtrx = moving(mov_mtrx);
+	glm::mat4 rot_mtrx = rotation(rot_mtrx);
 
-	CreateVertexBuffer(mov_mtrx);
+	CreateVertexBuffer(mov_mtrx, rot_mtrx);
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -35,16 +35,18 @@ static void RenderScene()
 }
 
 /*	Функция создания буфера вершин	*/
-static void CreateVertexBuffer(glm::mat4& m)
+static void CreateVertexBuffer(glm::mat4& m, glm::mat4& r)
 {
+	/*	Задаём начальные координаты	*/
 	glm::vec3 Vertices[3];
 	Vertices[0] = glm::vec3(-1.0f, -1.0f, 0.0f);
 	Vertices[1] = glm::vec3(1.0f, -1.0f, 0.0f);
 	Vertices[2] = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	Vertices[0] = glm::vec4(Vertices[0], 1.0f) * m;
-	Vertices[1] = glm::vec4(Vertices[1], 1.0f) * m;
-	Vertices[2] = glm::vec4(Vertices[2], 1.0f) * m;
+	/*	Задаёт координаты перемещения	*/
+	Vertices[0] = glm::vec4(Vertices[0], 1.0f) * m * r;
+	Vertices[1] = glm::vec4(Vertices[1], 1.0f) * m * r;
+	Vertices[2] = glm::vec4(Vertices[2], 1.0f) * m * r;
 
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -52,14 +54,25 @@ static void CreateVertexBuffer(glm::mat4& m)
 }
 
 /*	Функция передвижения	*/
-glm::mat4 moving(glm::mat4& m)
+glm::mat4 moving(glm::mat4& mtrx)
 {
-	m[0][0] = 1.0f; m[0][1] = 0.0f; m[0][2] = 0.0f; m[0][3] = sinf(Scale);
-	m[1][0] = 0.0f; m[1][1] = 1.0f; m[1][2] = 0.0f; m[1][3] = 0.0f;
-	m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = 1.0f; m[2][3] = 0.0f;
-	m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
+	mtrx[0][0] = 1.0f; mtrx[0][1] = 0.0f; mtrx[0][2] = 0.0f; mtrx[0][3] = sinf(Scale);
+	mtrx[1][0] = 0.0f; mtrx[1][1] = 1.0f; mtrx[1][2] = 0.0f; mtrx[1][3] = 0.0f;
+	mtrx[2][0] = 0.0f; mtrx[2][1] = 0.0f; mtrx[2][2] = 1.0f; mtrx[2][3] = 0.0f;
+	mtrx[3][0] = 0.0f; mtrx[3][1] = 0.0f; mtrx[3][2] = 0.0f; mtrx[3][3] = 1.0f;
 
-	return m;
+	return mtrx;
+}
+
+/*	Функция вращения	*/
+glm::mat4 rotation(glm::mat4& mtrx)
+{
+	mtrx[0][0] = cosf(Scale); mtrx[0][1] = -sinf(Scale); mtrx[0][2] = 0.0f; mtrx[0][3] = 0.0f;
+	mtrx[1][0] = sinf(Scale); mtrx[1][1] = cosf(Scale);  mtrx[1][2] = 0.0f; mtrx[1][3] = 0.0f;
+	mtrx[2][0] = 0.0f;        mtrx[2][1] = 0.0f;         mtrx[2][2] = 1.0f; mtrx[2][3] = 0.0f;
+	mtrx[3][0] = 0.0f;        mtrx[3][1] = 0.0f;         mtrx[3][2] = 0.0f; mtrx[3][3] = 1.0f;
+
+	return mtrx;
 }
 
 /*	Главная функция	*/
